@@ -10,14 +10,14 @@ from app.exceptions.conflict_409 import IntegrityException
 from app.exceptions.not_fount_404 import EntityNotFound
 from app.models.example import Example as ExampleModel
 from app.schemas.error_response import ErrorCodeType
-from app.schemas.example import Example, ExampleCreate
+from app.schemas.example import Example, ExampleCreate, ExampleType
 from app.services import example_service
 
 
 @pytest.mark.asyncio
 async def test_create_example_ok(db_transaction: AsyncSession):
     # Arrange
-    create_data = ExampleCreate(name='test', description='test')
+    create_data = ExampleCreate(name='test', description='test', example_type=ExampleType.EXAMPLE_TYPE_1)
 
     # Act
     example: Example = await example_service.create_example(db=db_transaction, create_data=create_data)
@@ -28,12 +28,13 @@ async def test_create_example_ok(db_transaction: AsyncSession):
     assert example.id is not None
     assert example.name == create_data.name
     assert example.description == create_data.description
+    assert example.example_type == ExampleType.EXAMPLE_TYPE_1
 
 
 @pytest.mark.asyncio
 async def test_create_example_double(db: AsyncSession, db_transaction: AsyncSession):
     # Arrange
-    create_data = ExampleCreate(name='test', description='test')
+    create_data = ExampleCreate(name='test', description='test', example_type=ExampleType.EXAMPLE_TYPE_1)
     await example_service.create_example(db=db, create_data=create_data)
     await db.commit()
 
@@ -57,7 +58,7 @@ async def test_create_example_double(db: AsyncSession, db_transaction: AsyncSess
 @pytest.mark.asyncio
 async def test_get_example_ok(db: AsyncSession):
     # Arrange
-    create_data = ExampleCreate(name='test', description='test')
+    create_data = ExampleCreate(name='test', description='test', example_type=ExampleType.EXAMPLE_TYPE_1)
     created_example: Example = await example_service.create_example(db=db, create_data=create_data)
     await db.commit()
 
@@ -69,6 +70,7 @@ async def test_get_example_ok(db: AsyncSession):
     assert example.id == created_example.id
     assert example.name == created_example.name
     assert example.description == created_example.description
+    assert example.example_type == ExampleType.EXAMPLE_TYPE_1
 
 
 @pytest.mark.asyncio
