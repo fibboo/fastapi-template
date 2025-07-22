@@ -1,6 +1,9 @@
 import logging
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from pydantic import ValidationError
+from starlette import status
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
@@ -17,6 +20,20 @@ log_level = logging.INFO if settings.environment == EnvironmentType.PROD else lo
 logging.getLogger('uvicorn.access').setLevel(log_level)
 
 app.include_router(api_router)
+
+
+@app.exception_handler(RequestValidationError)
+async def handle_request_validation_error(_: Request, exc: RequestValidationError):
+    exc_str = f"{exc}".replace("\n", " ").replace("   ", " ")
+    logger.error(exc_str)
+    return JSONResponse(content={"message": exc_str}, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+
+@app.exception_handler(Exception)
+async def handle_validation_error(_: Request, exc: ValidationError):
+    exc_str = f"{exc}".replace("\n", " ").replace("   ", " ")
+    logger.error(exc_str)
+    return JSONResponse(content={"message": exc_str}, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
 @app.exception_handler(AppBaseException)
